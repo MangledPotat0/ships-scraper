@@ -1,46 +1,38 @@
-from bs4 import BeautifulSoup
-#from playwright.sync_api import sync_playwright
-import json
-import requests
+# -*- coding: utf-8 -*-
+"""
+/run.py
+Process for scraping web sources to populate ships db.
+"""
 
-imo = 9648714
-url = f"https://www.vesselfinder.com/vessels/details/{imo}"
-headers = {"User-Agent": "Mozilla/5.0"}
-html = requests.get(url, headers=headers).text
-soup = BeautifulSoup(html, "lxml")
+# Built-in module import
+import time
+from typing import List
 
-sections = [
-        "History",
-        f"Offshore Support Vessel, IMO {imo}",
-        "Vessel Particulars",
-        "Voyage Data"
-]
+# Local module imoprt
+import app.scrape.imo as imo
+import app.scrape.scraper as sc
+from app.scrape.sources import Source
 
-master_dict = {}
-# static data
-for div in soup.find_all(["div", "section"]):
-    heading = div.find("h2")
-    if (heading is not None):
-        head = heading.get_text(strip=True)
-        if head in sections:
-            print(heading.get_text(strip=True))
-            rows = div.find_all("tr")
-            rows = {row.find("td", class_="tpc1").get_text(strip=True):
-                    row.find("td", class_="tpc2").get_text(strip=True)
-                    for row in rows
-                    if row.find("td", class_="tpc1")
-                        and row.find("td", class_="tpc2")}
-            rows = {k: v for k, v in rows.items() if (v != "") & (v != "-")}
-            master_dict |= rows
-# dynamic data
-djson = json.loads(soup.find("div", attrs={"data-json": True})["data-json"])
-keymap = {
-        "Position received": "lrpd",
-        "Latitude": "ship_lat",
-        "Longitude": "ship_lon",
-        "Course": "ship_cog",
-        "Speed": "ship_sog"
-}
-newdjson = {newkey: djson[oldkey] for newkey, oldkey in keymap.items()}
-master_dict |= newdjson
-print(master_dict)
+def run(sources: List[Sources]):
+    """
+    Runs the polling loop.
+
+    Args:
+        sources (List[Sources]): List of source enums to process.
+    """
+
+    scrapers = [sc.Scraper(source) for source in sources]
+    # For now just use a single source
+    scraper = scraper[0]
+    # Fetch from server with noisy period to make it look less sus
+    interval = 120 + np.random.random(-6, high=6)
+    next_time = time.monotonic()
+    while True:
+        dataframe = scraper.scrape(imo)
+        next_time += interval
+        time.sleep(max(0,next_time - time.monotonic()))
+    return
+
+if __name__ == "__main__":
+    sources = [Source.VESSELFINDER]
+    run(sources)
