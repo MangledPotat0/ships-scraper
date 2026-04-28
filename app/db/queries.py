@@ -153,7 +153,7 @@ RETURNING id;
 ############################## SELECT OPERATIONS ##############################
 def get_country(conn: connection, name: str = None) -> Optional[Dict[str, Any]]:
     """
-    Fetches country by name.
+    Fetches countries by name.
 
     Args:
         conn (connection): Handle for psql database connection.
@@ -170,6 +170,48 @@ def get_country(conn: connection, name: str = None) -> Optional[Dict[str, Any]]:
         name = re.sub(r"\s+", "_", name.lower())
     with conn.cursor() as cur:
         cur.execute(GET_COUNTRIES, (name,))
+        return cur.fetchall()
+
+def get_builder(conn: connection, name: str = None) -> Optional[Dict[str, Any]]:
+    """
+    Fetches builders by name.
+
+    Args:
+        conn (connection): Handle for psql database connection.
+        name (str): Name of the builder to fetch.
+
+    Returns:
+        Optional[Dict[str, Any]]: Dict object from RealDictCursor containing
+            record whose name matches name. None if no match is found.
+    """
+    # Format name string
+    if name is None:
+        name = "*"
+    else:
+        name = re.sub(r"\s+", "_", name.lower())
+    with conn.cursor() as cur:
+        cur.execute(GET_BUILDERS, (name,))
+        return cur.fetchall()
+
+def get_owner(conn: connection, name: str = None) -> Optional[Dict[str, Any]]:
+    """
+    Fetches owners by name.
+
+    Args:
+        conn (connection): Handle for psql database connection.
+        name (str): Name of the onwer to fetch.
+
+    Returns:
+        Optional[Dict[str, Any]]: Dict object from RealDictCursor containing
+            record whose name matches name. None if no match is found.
+    """
+    # Format name string
+    if name is None:
+        name = "*"
+    else:
+        name = re.sub(r"\s+", "_", name.lower())
+    with conn.cursor() as cur:
+        cur.execute(GET_OWNERS, (name,))
         return cur.fetchall()
 
 # EOF
